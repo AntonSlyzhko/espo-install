@@ -1,0 +1,16 @@
+[Unit]
+Description=EspoCRM Daemon Service
+Requires=mysql.service
+After=mysql.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+User=www-data
+ExecStart=/usr/bin/php /var/www/espocrm/daemon.php
+StandardError=file:/var/www/espocrm/data/logs/daemon.log
+
+[Install]
+WantedBy=default.target
