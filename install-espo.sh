@@ -36,7 +36,9 @@ sudo curl -L -o /var/www/espocrm.zip "$zip_url"
 sudo unzip -qq /var/www/espocrm.zip -d /var/www
 
 sudo mv /var/www/$folder_name /var/www/espocrm
-
+sudo mkdir -p /var/www/espocrm/data/logs
+sudo mkdir -p /var/www/espocrm/client/custom/
+sudo mkdir -p /var/www/espocrm/custom/Espo/Custom
 # Copy service files to systemd
 sudo cp espocrm-daemon.service /etc/systemd/system/espocrm-daemon.service
 sudo cp espocrm-websocket.service /etc/systemd/system/espocrm-websocket.service
