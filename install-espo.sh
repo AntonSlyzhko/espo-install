@@ -3,6 +3,7 @@
 # Basic packages installation
 sudo apt update && sudo apt upgrade -y
 sudo apt install curl ca-certificates apt-transport-https gnupg2 lsb-release ubuntu-keyring nginx mariadb-server unzip -y
+sudo apt install php php-fpm php-mysql php-json php-imap php-gd php-zip php-mbstring php-curl php-xml php-bcmath php-ldap php-zmq -y
 sudo phpenmod imap mbstring
 
 # Define php version for future usage
