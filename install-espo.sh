@@ -39,10 +39,20 @@ DB_USER_PASS=$(openssl rand -base64 25 | tr -dc '[:alnum:]!@#$%^&*()-_+=' | head
 SQL_COMMAND="DROP DATABASE IF EXISTS espocrmdb; CREATE DATABASE espocrmdb; GRANT ALL ON espocrmdb.* TO espocrmuser@localhost IDENTIFIED BY '$DB_USER_PASS' WITH GRANT OPTION; FLUSH PRIVILEGES;"
 sudo mariadb --user=root -e "$SQL_COMMAND"
 
+# Get the total RAM in KB
+total_ram_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+
+# Calculate 70% of total RAM
+innodb_buffer_pool_size_kb=$((total_ram_kb * 70 / 100))
+
+# Convert the value to MB for MySQL configuration (optional, but often MySQL config uses MB)
+innodb_buffer_pool_size_mb=$((innodb_buffer_pool_size_kb / 1024))
+
 MARIADB_CONFIG="
 max_connections = 200
 table_definition_cache = 800
 table_open_cache = 4000
+innodb_buffer_pool_size = ${innodb_buffer_pool_size_mb}M
 innodb_flush_method = O_DIRECT
 innodb_log_file_size = 2G
 innodb_flush_log_at_trx_commit = 2
@@ -62,7 +72,8 @@ sudo unzip -qq /var/www/espocrm.zip -d /var/www
 sudo mv /var/www/$folder_name /var/www/espocrm
 sudo mkdir -p /var/www/espocrm/data/logs
 sudo mkdir -p /var/www/espocrm/client/custom/
-sudo mkdir -p /var/www/espocrm/custom/Espo/Custom
+sudo mkdir -p /var/www/espocrm/custom/Espo/Custom/Resources/metadata/app
+sudo cp recordId.json /var/www/espocrm/custom/Espo/Custom/Resources/metadata/app/
 # Copy service files to systemd
 sudo cp espocrm-daemon.service /etc/systemd/system/espocrm-daemon.service
 sudo cp espocrm-websocket.service /etc/systemd/system/espocrm-websocket.service
