@@ -1,7 +1,7 @@
 [Unit]
 Description=EspoCRM Daemon Service
-Requires=mysql.service
-After=mysql.service
+Requires=mariadb.service
+After=mariadb.service
 
 [Service]
 Type=simple

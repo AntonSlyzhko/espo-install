@@ -2,8 +2,23 @@
 
 # Basic packages installation
 sudo apt update && sudo apt upgrade -y
-sudo apt install curl ca-certificates apt-transport-https gnupg2 lsb-release ubuntu-keyring nginx mariadb-server unzip -y
-sudo apt install php php-fpm php-mysql php-json php-imap php-gd php-zip php-mbstring php-curl php-xml php-bcmath php-ldap php-zmq -y
+sudo apt install curl ca-certificates apt-transport-https gnupg2 lsb-release ubuntu-keyring unzip -y
+
+curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+    | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+http://nginx.org/packages/ubuntu `lsb_release -cs` nginx" \
+    | sudo tee /etc/apt/sources.list.d/nginx.list
+echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" \
+    | sudo tee /etc/apt/preferences.d/99nginx
+sudo apt update
+sudo apt install nginx
+
+sudo curl -LsSo /etc/apt/trusted.gpg.d/mariadb-keyring-2019.gpg https://supplychain.mariadb.com/mariadb-keyring-2019.gpg
+sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] http://sfo1.mirrors.digitalocean.com/mariadb/repo/11.4/ubuntu noble main'
+apt install mariadb-server
+
+sudo apt install --no-install-recommends php8.3 php8.3-fpm php8.3-mysql php8.3-imap php8.3-gd php8.3-zip php8.3-mbstring php8.3-curl php8.3-xml php8.3-bcmath php8.3-ldap php8.3-zmq -y
 sudo phpenmod imap mbstring
 
 # Define php version for future usage
@@ -72,8 +87,7 @@ sudo unzip -qq /var/www/espocrm.zip -d /var/www
 sudo mv /var/www/$folder_name /var/www/espocrm
 sudo mkdir -p /var/www/espocrm/data/logs
 sudo mkdir -p /var/www/espocrm/client/custom/
-sudo mkdir -p /var/www/espocrm/custom/Espo/Custom/Resources/metadata/app
-sudo cp recordId.json /var/www/espocrm/custom/Espo/Custom/Resources/metadata/app/
+
 # Copy service files to systemd
 sudo cp espocrm-daemon.service /etc/systemd/system/espocrm-daemon.service
 sudo cp espocrm-websocket.service /etc/systemd/system/espocrm-websocket.service
@@ -91,19 +105,21 @@ SELF_SIGNED_CERT="
 ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
 ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
 "
+
+sudo mkdir -p /etc/nginx/snippets
 sudo touch /etc/nginx/snippets/self-signed.conf
 
 echo "$SELF_SIGNED_CERT" | sudo tee -a "/etc/nginx/snippets/self-signed.conf" > /dev/null
 
 # Create Nginx site config
-nginx_conf_file_path="/etc/nginx/sites-available/espocrm.conf"
+nginx_conf_file_path="/etc/nginx/conf.d/espocrm.conf"
 sudo cp espocrm.conf $nginx_conf_file_path
 read -p "Enter the domain name: " domain_name
 
 sudo sed -i "s/DOMAIN_NAME/$domain_name/g" "$nginx_conf_file_path"
 sudo sed -i "s/PHP_VERSION/$php_version/g" "$nginx_conf_file_path"
 sudo ln -sf $nginx_conf_file_path /etc/nginx/sites-enabled/espocrm.conf
-sudo rm /etc/nginx/sites-enabled/default
+sudo rm /etc/nginx/conf.d/default*
 
 sudo cp set-permissions.sh /var/www/espocrm/set-permissions.sh
 cd /var/www/espocrm && sudo find data -type d -exec sudo chmod 775 {} + && sudo chown -R 33:33 .;

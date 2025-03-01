@@ -1,7 +1,7 @@
 [Unit]
 Description=EspoCRM WebSocket Service
-Requires=mysql.service
-After=mysql.service
+Requires=mariadb.service
+After=mariadb.service
 StartLimitIntervalSec=0
 
 [Service]
